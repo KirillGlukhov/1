@@ -45,7 +45,7 @@ def transform_image(image_open, image_save):
     image.save( image_save )
 
 
-def get_line_symbols( image_open, image_save ):
+def get_line_symbols( image_open ):
     image = ImagePIL.open( image_open ) #открываем изображение.
     width, height = image.size # получили размер изображения
 
@@ -106,7 +106,6 @@ def get_line_symbols( image_open, image_save ):
             number_white_pixel = 0
             number_black_pixel = 0
 
-    image.save( image_save )
     return list_name_part
 
 
@@ -178,18 +177,27 @@ def get_symbols( list_name_parts ):
                 if count < 4:
                     count = 0
                 else:
-                    part_text = image.crop((x - count, y, x, height))
-                    part_text.save('{}/{}.png'.format(name, count_symbols))
+                    part_text = image.crop(( x - count, y, x, height ))
+                    part_text.save('{}/{}.png'.format( name, count_symbols ))
                     count = 0
                     count_symbols += 1
 
-
+def transcript_symbols( list_name_parts ):
+    open = 0
+    for name in list_name_parts:
+        count_files_in_string = len(os.listdir('{}'.format( name )))
+        for number in range( count_files_in_string ):
+            image_name = '{}.png'.format( number + 1 )
+            image = ImagePIL.open('{}/{}'.format( name, image_name )) #открываем изображение.
+            open +=1
+    return open
 
 
 if __name__ == '__main__':
 
-    transform_image( '2.jpg', 'test.png' )
-    list_name_parts = get_line_symbols( 'test.png', 'test2.png' )
+    transform_image( '3.jpg', 'test.png' )
+    list_name_parts = get_line_symbols( 'test.png' )
     enclose_symbols( list_name_parts )
     get_symbols( list_name_parts )
+    print(transcript_symbols( list_name_parts ))
     remove_part_file(list_name_parts)
