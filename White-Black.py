@@ -180,12 +180,6 @@ if __name__ == '__main__':
     enclose_symbols( 'test.png', 'test2.png' )
     print(u'ширина = ', get_size_symbols('test2.png')[0], 'высота = ', get_size_symbols('test2.png')[1])
 
-
-
-
-
-
-
     # text = image_to_string(image)
     # text = image_file_to_string(image_file)
     # text = image_file_to_string(image_file, graceful_errors=True)
