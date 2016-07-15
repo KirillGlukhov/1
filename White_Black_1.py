@@ -5,8 +5,7 @@ from PIL import ImageDraw as ImageDrawPIL
 from operator import itemgetter
 import math
 import hashlib
-from pytesser import *
-import random, os
+import random, os, shutil
 
 def black_white_jpg( image ):
     width = image.size[0] #Определяем ширину.
@@ -46,7 +45,7 @@ def transform_image(image_open, image_save):
     image.save( image_save )
 
 
-def get_line_symbols( image_open, image_save ): #обносим символы рамкой
+def get_line_symbols( image_open, image_save ):
     image = ImagePIL.open( image_open ) #открываем изображение.
     width, height = image.size # получили размер изображения
 
@@ -69,6 +68,7 @@ def get_line_symbols( image_open, image_save ): #обносим символы �
                 for col in range( x ):
                     image.putpixel(( col, y ), ( 125, 0, 125 )) # Изменяем цвет пикселя
 
+    #image.save('1111111.png')
     list_name_part = []
 
     x = 1
@@ -91,8 +91,6 @@ def get_line_symbols( image_open, image_save ): #обносим символы �
             number_black_pixel += 1
 
         if pix == (125, 0, 125) and white_pixel == True and black_pixel == False and number_white_pixel > 3 :
-            for col in range( number_white_pixel + 1 ):
-                image.putpixel(( x, y-col ), ( 125, 0, 125 )) # Изменяем цвет пикселя
             white_pixel = False
             number_black_pixel = 0
 
@@ -101,7 +99,6 @@ def get_line_symbols( image_open, image_save ): #обносим символы �
             part_text.save('{}.png'.format(name_part))
             list_name_part.append(name_part)
 
-
         if pix == (125, 0, 125):
             white_pixel = False
             black_pixel = False
@@ -109,95 +106,90 @@ def get_line_symbols( image_open, image_save ): #обносим символы �
             number_white_pixel = 0
             number_black_pixel = 0
 
-    image.save(image_save)
+    image.save( image_save )
     return list_name_part
 
-def remove_part_file(name_list):
-    for name in name_list:
+
+def remove_part_file( list_name_parts ):
+    for name in list_name_parts:
         os.remove('{}.png'.format(name))
+        shutil.rmtree('{}'.format(name))
 
 def enclose_symbols( list_name_parts ): #обносим символы рамкой
     for name in list_name_parts:
-        image = ImagePIL.open( '{}.png'.format(name) ) #открываем изображение.
+        image_name = '{}.png'.format( name )
+        image = ImagePIL.open( image_name ) #открываем изображение.
         width, height = image.size # получили размер изображения
 
+        for x in range( width ):
+            white_pixel = False
+            black_pixel = False
+
+            number_white_pixel = 0
+            number_black_pixel = 0
+
+            for y in range( height ):
+                pix = image.getpixel(( x,y ))
+
+                if pix == (255, 255, 255 ):
+                    white_pixel = True
+                    number_white_pixel += 1
 
 
+                if pix == (0, 0, 0):
+                    black_pixel = True
+                    number_black_pixel += 1
 
 
-def get_size_symbols(image_open):
-    image = ImagePIL.open( image_open ) #открываем изображение.
-    width, height = image.size # получили размер изображения
+                if y == height-1 and white_pixel == True and ( black_pixel == False or number_black_pixel == 0 ):
+                    for col in range( height ):
+                        image.putpixel(( x, col ), ( 125, 0, 125 )) # Изменяем цвет пикселя
+                    white_pixel = False
+                    number_black_pixel = 0
 
-    list_height_x = {} # в словаре ширина всех знаков и их кол-во
-    list_height_y = {} # словарь высот всех знаков
 
-    list_height_x_list = [] # в словаре ширина всех знаков и их кол-во
-    list_height_y_list = [] # словарь высот всех знаков
+                if y == height-1:
+                    white_pixel = False
+                    black_pixel = False
 
-    height_x = 0
-    height_y = 0
+                    number_white_pixel = 0
+                    number_black_pixel = 0
 
-    for x in range( width ):
-        for y in range( height ):
-            pix = image.getpixel(( x,y ))
+        image.save(image_name)
 
-            if pix == (255, 255, 255 ):
-                height_y += 1
+def get_symbols( list_name_parts ):
+    for name in list_name_parts:
+        image_name = '{}.png'.format( name )
+        image = ImagePIL.open( image_name ) #открываем изображение.
+        width, height = image.size # получили размер изображения
 
-            if pix == (0, 0, 0):
-                height_y += 1
+        os.mkdir('{}'.format(name))
 
-            if pix == (125, 0, 125) :
-                if height_y > 4:
-                    # if height_y  in list_height_y.keys():
-                    #     list_height_y[height_y] += 1
-                    #     height_y = 0
-                    # else:
-                    #     list_height_y[height_y] = 1
-
-                    if height_y not in list_height_y_list:
-                        list_height_y_list.append( height_y )
-                        height_y = 0
-                    else:
-                        height_y = 0
-
-                else:
-                    height_y = 0
-
-    for y in range( height ):
+        y = 0
+        count = 0
+        count_symbols = 1
         for x in range( width ):
             pix = image.getpixel(( x,y ))
 
-            if pix == (255, 255, 255 ):
-                height_x += 1
+            if pix == (255, 255, 255) or pix == (0, 0, 0):
+                count += 1
 
-            if pix == (0, 0, 0):
-                height_x += 1
-
-            if pix == (125, 0, 125) :
-                if height_x > 4:
-                    # if height_x  in list_height_x.keys():
-                    #     list_height_x[ height_x ] += 1
-                    #     height_x = 0
-                    # else:
-                    #     list_height_x[ height_x ] = 1
-
-                    if height_x not in list_height_x_list:
-                        list_height_x_list.append( height_x )
-                        height_x = 0
-                    else:
-                        height_x = 0
+            if pix == (125, 0, 125) and count != 0:
+                if count < 4:
+                    count = 0
                 else:
-                    height_x = 0
+                    part_text = image.crop((x - count, y, x, height))
+                    part_text.save('{}/{}.png'.format(name, count_symbols))
+                    count = 0
+                    count_symbols += 1
 
-    return list_height_x_list, list_height_y_list
+
 
 
 if __name__ == '__main__':
 
     transform_image( '2.jpg', 'test.png' )
     list_name_parts = get_line_symbols( 'test.png', 'test2.png' )
-    enclose_symbols(list_name_parts)
-    #print(u'ширина = ', get_size_symbols('test2.png')[0], 'высота = ', get_size_symbols('test2.png')[1])
-    #remove_part_file(list_name_parts)
+    enclose_symbols( list_name_parts )
+    get_symbols( list_name_parts )
+    remove_part_file(list_name_parts)
